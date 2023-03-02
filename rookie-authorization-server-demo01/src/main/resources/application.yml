@@ -9,3 +9,6 @@ logging:
 server:
   ssl:
     enabled: false
+spring:
+  main:
+    allow-bean-definition-overriding: true
