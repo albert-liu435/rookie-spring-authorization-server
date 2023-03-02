@@ -1,3 +1,11 @@
 logging:
   level:
     root: debug
+    org:
+      springframework:
+        security:
+          oauth2: debug
+#默认开启，需要关闭
+server:
+  ssl:
+    enabled: false

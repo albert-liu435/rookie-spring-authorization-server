@@ -37,7 +37,7 @@ import java.util.UUID;
 
 /**
  * @Classname SecurityConfig
- * @Description TODO
+ * @Description https://docs.spring.io/spring-authorization-server/docs/current/reference/html/getting-started.html
  * @Author rookie
  * @Date 2023/2/28 23:27
  * @Version 1.0
@@ -45,13 +45,20 @@ import java.util.UUID;
 @Configuration
 public class SecurityConfig {
 
+    /**
+     * security过滤器链，默认配置
+     *
+     * @param http
+     * @return
+     * @throws Exception
+     */
     @Bean
     @Order(1)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
             throws Exception {
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
         http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
-                .oidc(Customizer.withDefaults());	// Enable OpenID Connect 1.0
+                .oidc(Customizer.withDefaults());    // Enable OpenID Connect 1.0
 
         http
                 // Redirect to the login page when not authenticated from the
@@ -66,6 +73,13 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * 用于Spring Security的身份认证。
+     *
+     * @param http
+     * @return
+     * @throws Exception
+     */
     @Bean
     @Order(2)
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
@@ -81,6 +95,11 @@ public class SecurityConfig {
         return http.build();
     }
 
+    /**
+     * 配置用户信息，或者用户来源数据，用于检索
+     *
+     * @return
+     */
     @Bean
     public UserDetailsService userDetailsService() {
         UserDetails userDetails = User.withDefaultPasswordEncoder()
@@ -92,6 +111,11 @@ public class SecurityConfig {
         return new InMemoryUserDetailsManager(userDetails);
     }
 
+    /**
+     * oauth2 用于第三方认证，RegisteredClientRepository 主要用于管理第三方（每个第三方就是一个客户端）
+     *
+     * @return
+     */
     @Bean
     public RegisteredClientRepository registeredClientRepository() {
         RegisteredClient registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())
@@ -113,6 +137,11 @@ public class SecurityConfig {
         return new InMemoryRegisteredClientRepository(registeredClient);
     }
 
+    /**
+     * 用于access_token签名使用
+     *
+     * @return
+     */
     @Bean
     public JWKSource<SecurityContext> jwkSource() {
         KeyPair keyPair = generateRsaKey();
@@ -126,24 +155,39 @@ public class SecurityConfig {
         return new ImmutableJWKSet<>(jwkSet);
     }
 
+    /**
+     * 生成秘钥对，为jwkSource提供服务。
+     *
+     * @return
+     */
     private static KeyPair generateRsaKey() {
         KeyPair keyPair;
         try {
             KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
             keyPairGenerator.initialize(2048);
             keyPair = keyPairGenerator.generateKeyPair();
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             throw new IllegalStateException(ex);
         }
         return keyPair;
     }
 
+    /**
+     * An instance of JwtDecoder for decoding signed access tokens.
+     *
+     * @param jwkSource
+     * @return
+     */
     @Bean
     public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
         return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
     }
 
+    /**
+     * An instance of AuthorizationServerSettings to configure Spring Authorization Server.
+     *
+     * @return
+     */
     @Bean
     public AuthorizationServerSettings authorizationServerSettings() {
         return AuthorizationServerSettings.builder().build();
